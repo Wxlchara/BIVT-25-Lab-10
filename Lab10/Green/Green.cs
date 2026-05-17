@@ -1,4 +1,3 @@
-using Lab9.Green;
 using System;
 using System.IO;
 
@@ -9,78 +8,151 @@ namespace Lab10.Green
         private GreenFileManager _manager;
         private Lab9.Green.Green[] _tasks;
 
-        public GreenFileManager Manager => _manager;
-        public Lab9.Green.Green[] Tasks => (Lab9.Green.Green[])_tasks.Clone();
+        public GreenFileManager Manager
+        {
+            get { return _manager; }
+        }
+
+        public Lab9.Green.Green[] Tasks
+        {
+            get { return (Lab9.Green.Green[])_tasks.Clone(); }
+        }
 
         public Green(Lab9.Green.Green[] tasks = null)
         {
-            _tasks = tasks != null ? (Lab9.Green.Green[])tasks.Clone() : new Green[0];
+            _manager = null;
+            _tasks = tasks == null ? new Lab9.Green.Green[0] : (Lab9.Green.Green[])tasks.Clone();
         }
 
-        public Green(GreenFileManager manager, Lab9.Green.Green[] tasks = null) : this(tasks)
+        public Green(GreenFileManager manager, Lab9.Green.Green[] tasks = null)
         {
             _manager = manager;
+            _tasks = tasks == null ? new Lab9.Green.Green[0] : (Lab9.Green.Green[])tasks.Clone();
         }
 
-        public Green(Lab9.Green.Green[] tasks, GreenFileManager manager) : this(tasks)
+        public Green(Lab9.Green.Green[] tasks, GreenFileManager manager)
         {
             _manager = manager;
+            _tasks = tasks == null ? new Lab9.Green.Green[0] : (Lab9.Green.Green[])tasks.Clone();
         }
 
-        public void Add(Green task)
+        public void Add(Lab9.Green.Green task)
         {
-            if (task == null) return;
+            if (task == null)
+            {
+                return;
+            }
+
             Array.Resize(ref _tasks, _tasks.Length + 1);
             _tasks[_tasks.Length - 1] = task;
         }
 
         public void Add(Lab9.Green.Green[] tasks)
         {
-            if (tasks == null) return;
-            foreach (var t in tasks) Add(t);
+            if (tasks == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < tasks.Length; i++)
+            {
+                Add(tasks[i]);
+            }
         }
 
         public void Remove(Lab9.Green.Green task)
         {
-            if (task == null || _tasks.Length == 0) return;
-            var list = new System.Collections.Generic.List<Green>(_tasks);
-            list.Remove(task);
-            _tasks = list.ToArray();
+            if (task == null || _tasks == null)
+            {
+                return;
+            }
+
+            int index = -1;
+
+            for (int i = 0; i < _tasks.Length; i++)
+            {
+                if (_tasks[i] == task)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            if (index == -1)
+            {
+                return;
+            }
+
+            Lab9.Green.Green[] result = new Lab9.Green.Green[_tasks.Length - 1];
+
+            for (int i = 0, j = 0; i < _tasks.Length; i++)
+            {
+                if (i != index)
+                {
+                    result[j] = _tasks[i];
+                    j++;
+                }
+            }
+
+            _tasks = result;
         }
 
         public void Clear()
         {
-            _tasks = new Green[0];
-            if (_manager != null && Directory.Exists(_manager.FolderPath))
+            _tasks = new Lab9.Green.Green[0];
+
+            if (_manager != null && _manager.FolderPath != null && Directory.Exists(_manager.FolderPath))
+            {
                 Directory.Delete(_manager.FolderPath, true);
+            }
         }
 
         public void SaveTasks()
         {
-            if (_manager == null || _tasks.Length == 0) return;
+            if (_manager == null || _tasks == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < _tasks.Length; i++)
             {
-                _manager.ChangeFileName($"Task{i + 1}");
-                _manager.Serialize(_tasks[i]);
+                if (_tasks[i] != null)
+                {
+                    _manager.ChangeFileName("Task" + (i + 1));
+                    _manager.Serialize(_tasks[i]);
+                }
             }
         }
 
         public void LoadTasks()
         {
-            if (_manager == null || _tasks.Length == 0) return;
+            if (_manager == null || _tasks == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < _tasks.Length; i++)
             {
-                _manager.ChangeFileName($"Task{i + 1}");
-                _tasks[i] = _manager.Deserialize<Green>();
+                _manager.ChangeFileName("Task" + (i + 1));
+                _tasks[i] = _manager.Deserialize<Lab9.Green.Green>();
             }
         }
 
         public void ChangeManager(GreenFileManager manager)
         {
+            if (manager == null)
+            {
+                return;
+            }
+
             _manager = manager;
-            if (!Directory.Exists(manager.FolderPath))
-                Directory.CreateDirectory(manager.FolderPath);
-            manager.SelectFolder(manager.FolderPath);
+
+            if (_manager.FolderPath != null && !Directory.Exists(_manager.FolderPath))
+            {
+                Directory.CreateDirectory(_manager.FolderPath);
+            }
+
+            _manager.SelectFolder(_manager.FolderPath);
         }
     }
 }
